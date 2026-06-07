@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000', 
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,9 +19,7 @@ api.interceptors.request.use(
 
     return config
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
 // RESPONSE INTERCEPTOR
@@ -30,7 +28,6 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status
 
-    // token expired / unauthorized
     if (status === 401) {
       useAuthStore.getState().logout()
       window.location.href = '/'
