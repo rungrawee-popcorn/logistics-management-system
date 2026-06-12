@@ -30,7 +30,9 @@ import { PrismaModule } from './database/prisma.module';
     NotificationsModule,
     DashboardModule,
   ],
+
   controllers: [AppController],
+
   providers: [AppService],
 })
 export class AppModule {}
