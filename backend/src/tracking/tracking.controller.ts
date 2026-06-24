@@ -1,34 +1,64 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+
 import { TrackingService } from './tracking.service';
-import { CreateTrackingDto } from './dto/create-tracking.dto';
-import { UpdateTrackingDto } from './dto/update-tracking.dto';
+
+import { UpdateLocationDto } from './dto/update-location.dto';
+
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('tracking')
 export class TrackingController {
   constructor(private readonly trackingService: TrackingService) {}
 
-  @Post()
-  create(@Body() createTrackingDto: CreateTrackingDto) {
-    return this.trackingService.create(createTrackingDto);
+  // =====================================
+  // Update Rider Location
+  // =====================================
+  @UseGuards(JwtAuthGuard)
+  @Post('rider/:riderId/location')
+  updateLocation(
+    @Param('riderId') riderId: string,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    return this.trackingService.updateLocation(
+      riderId,
+      dto.latitude,
+      dto.longitude,
+    );
   }
 
+  // =====================================
+  // Latest Rider Location
+  // =====================================
+  @UseGuards(JwtAuthGuard)
+  @Get('rider/:riderId/latest')
+  getLatestLocation(@Param('riderId') riderId: string) {
+    return this.trackingService.getLatestLocation(riderId);
+  }
+
+  // =====================================
+  // Rider Tracking History
+  // =====================================
+  @UseGuards(JwtAuthGuard)
+  @Get('rider/:riderId/history')
+  getTrackingHistory(@Param('riderId') riderId: string) {
+    return this.trackingService.getTrackingHistory(riderId);
+  }
+
+  // =====================================
+  // Track Order
+  // =====================================
+  @UseGuards(JwtAuthGuard)
+  @Get('order/:orderId')
+  getOrderTracking(@Param('orderId') orderId: string) {
+    return this.trackingService.getOrderTracking(orderId);
+  }
+
+  // =====================================
+  // Admin View Tracking Records
+  // =====================================
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.trackingService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.trackingService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTrackingDto: UpdateTrackingDto) {
-    return this.trackingService.update(+id, updateTrackingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.trackingService.remove(+id);
   }
 }

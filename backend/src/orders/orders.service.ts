@@ -12,9 +12,14 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 
 import { OrderStatus, RiderStatus, UserRole } from '@prisma/client';
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   // =========================
   // CONFIG (Delivery Fee Rules)
@@ -247,6 +252,14 @@ export class OrdersService {
         },
       });
 
+      if (status === OrderStatus.DELIVERED) {
+        await this.notificationsService.createSystemNotification(
+          order.customerId,
+          'Order Delivered',
+          `Your order ${order.trackingCode} has been delivered successfully.`,
+        );
+      }
+
       return updated;
     });
   }
@@ -306,6 +319,12 @@ export class OrdersService {
           status: OrderStatus.ASSIGNED,
         },
       });
+
+      await this.notificationsService.createSystemNotification(
+        order.customerId,
+        'Order Assigned',
+        `Your order ${order.trackingCode} has been assigned to a rider.`,
+      );
 
       return {
         message: 'Rider assigned successfully',

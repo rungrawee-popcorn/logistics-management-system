@@ -1,26 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDashboardDto } from './dto/create-dashboard.dto';
-import { UpdateDashboardDto } from './dto/update-dashboard.dto';
+
+import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class DashboardService {
-  create(createDashboardDto: CreateDashboardDto) {
-    return 'This action adds a new dashboard';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return `This action returns all dashboard`;
-  }
+  async getSummary() {
+    const [
+      totalUsers,
+      totalRiders,
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      unreadNotifications,
+    ] = await Promise.all([
+      this.prisma.user.count(),
 
-  findOne(id: number) {
-    return `This action returns a #${id} dashboard`;
-  }
+      this.prisma.rider.count(),
 
-  update(id: number, updateDashboardDto: UpdateDashboardDto) {
-    return `This action updates a #${id} dashboard`;
-  }
+      this.prisma.order.count(),
 
-  remove(id: number) {
-    return `This action removes a #${id} dashboard`;
+      this.prisma.order.count({
+        where: {
+          status: 'PENDING',
+        },
+      }),
+
+      this.prisma.order.count({
+        where: {
+          status: 'DELIVERED',
+        },
+      }),
+
+      this.prisma.notification.count({
+        where: {
+          isRead: false,
+        },
+      }),
+    ]);
+
+    return {
+      totalUsers,
+      totalRiders,
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      unreadNotifications,
+    };
   }
 }
